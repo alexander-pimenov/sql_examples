@@ -976,7 +976,65 @@ FROM K001_CABINET_WORK_GROUP k
 ORDER BY to_number(k.K001_CODE_CAB) desc
 OFFSET 20 ROWS FETCH NEXT 10 ROWS ONLY;
 
- 
+ --Технические запросы по полям таблицы - в каких таблицах есть колонки с именем USER_ID. LIKE РЕГИСТРОЗАВИСИМЫЙ!!!
+ --Выполни и увидешь:
+ SELECT table_name, column_name, data_type FROM USER_TAB_COLUMNS WHERE COLUMN_NAME LIKE '%USER_ID%'; --есть результат
+ SELECT table_name, column_name, data_type FROM USER_TAB_COLUMNS WHERE COLUMN_NAME LIKE '%user_id%'; --нет результата
+
+ --Обойти регистрозависимость поможет нам функция UPPER или LOWER
+ SELECT table_name, column_name, data_type FROM USER_TAB_COLUMNS WHERE LOWER(COLUMN_NAME) LIKE '%user_id%'; --есть результат!!
+ SELECT table_name, column_name, data_type FROM USER_TAB_COLUMNS WHERE UPPER(COLUMN_NAME) LIKE '%USER_ID%'; --есть результат
+
+--добавить , удалить , переименовать колонки в существующей таблице, изменить дефолтное значение
+ALTER TABLE PERSONS  ADD birth_date DATE NOT NULL;
+
+ALTER TABLE
+    PERSONS ADD(
+        created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+        updated_at TIMESTAMP WITH TIME ZONE NOT NULL
+    );
+
+ALTER TABLE CODE_LIST_TYPE_ERROR
+ADD ID_CODE_LISTS VARCHAR2(50) NOT NULL
+CONSTRAINT CODE_LIST_TYPE_ERROR_FK REFERENCES CODE_LISTS(ID);
+
+ALTER TABLE PERSONS DROP (modified_time, created_time);
+
+ALTER TABLE PERSONS
+ADD CONSTRAINT pk_persons PRIMARY KEY (person_id);
+
+ALTER TABLE table_name RENAME COLUMN column_name TO new_name;
+
+ALTER TABLE *table_name*
+MODIFY *column_name* DEFAULT *value*;
+
+ALTER TABLE K005_SETTINGS_WORK_GROUP_CABINET  MODIFY K005_CREATED_AT DEFAULT CURRENT_TIMESTAMP;
+--------------------------------------------------------------------
+
+
+create sequence tt_sequence
+start with 1
+increment by 1;
+
+
+create trigger tt_trigger
+before insert on PERSONS for each row
+begin
+  select tt_sequence.nextval
+  into :new.id
+  from dual;
+end;
+
+--Как при создании таблицы задать столбец с датой создания записи по умолчанию?
+--Вот два способа указать дату и время создания записи и оба работают:
+create table svod (
+    createdt date default sysdate,
+    createts timestamp default systimestamp
+);
+SELECT * FROM svod;
+INSERT INTO svod (createdt) VALUES ( to_date('19.01.1980', 'dd.mm.yyyy'));
+INSERT INTO svod (createts) VALUES ( to_date('01.01.2000', 'dd.mm.yyyy'));
+
  
 
 
